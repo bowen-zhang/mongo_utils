@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+
+enum Status {
+	NotStarted=0;
+	Running=1;
+	Done=2;
+}
+
+message Test {
+	int32 int_value = 1;
+	float float_value = 2;
+	string string_value = 3;
+	repeated int32 int_list = 4;
+
+	SubTest sub_test = 5;
+	repeated SubTest sub_test_list = 6;
+
+	google.protobuf.Timestamp datetime_value = 7;
+}
+
+message SubTest {
+	int32 value = 1;
+}
