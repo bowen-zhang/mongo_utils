@@ -49,6 +49,12 @@ class MongoStorage(object):
       self._auto_id = AutoId(self._collection, self._database, self._client)
     return self._auto_id
 
+  def find_one(self, filter):
+    return self._coll.find_one(filter)
+
+  def find(self, filter):
+    return self._coll.find(filter)
+
   def find_or_create(self, filter, new_doc):
     doc = self._coll.find_one(filter)
     if not doc:
@@ -68,6 +74,21 @@ class MongoStorage(object):
 
 
 class ProtobufMongoStorage(MongoStorage):
+  def __init__(self, proto_cls, *args, **kwargs):
+    super(ProtobufMongoStorage, self).__init__(*args, **kwargs)
+    self._proto_cls = proto_cls
+
+  def find_one(self, filter):
+    doc = super(ProtobufMongoStorage, self).find_one(filter)
+    if doc:
+      return dict_format.Parse(doc, self._proto_cls())
+    else:
+      return None
+
+  def find(self, filter):
+    for doc in super(ProtobufMongoStorage, self).find(filter):
+      yield dict_format.Parse(doc, self._proto_cls())
+
   def find_or_create(self, filter, proto):
     doc = dict_format.MessageToDict(proto)
     doc = super(ProtobufMongoStorage, self).find_or_create(filter, doc)
