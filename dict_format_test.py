@@ -21,6 +21,16 @@ class DictFormatTests(unittest.TestCase):
     )
     self._proto.datetime_value.FromDatetime(datetime.datetime.utcnow())
 
+  def testMessageToDictWithDefaultValue(self):
+    proto = test_pb2.Test(int_value=0)
+    bson = dict_format.MessageToDict(proto)
+    self.assertIn('int_value', bson)
+    self.assertTrue(isinstance(bson['int_value'], int))
+    self.assertEqual(bson['int_value'], proto.int_value)
+    self.assertNotIn('int_list', bson)
+    self.assertNotIn('sub_test', bson)
+    self.assertNotIn('sub_test_list', bson)
+
   def testMessageToDict(self):
     bson = dict_format.MessageToDict(self._proto)
     self.assertIn('int_value', bson)

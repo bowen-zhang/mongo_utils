@@ -72,8 +72,9 @@ def MessageToDict(proto):
     return proto.ToDatetime()
 
   dict_obj = {}
-  for field, value in proto.ListFields():
+  for field in proto.DESCRIPTOR.fields:
     if field.label == descriptor.FieldDescriptor.LABEL_REPEATED:
+      value = getattr(proto, field.name)
       dict_obj_list = []
       if field.type in PRIMITIVE_TYPES:
         for child in value:
@@ -81,11 +82,15 @@ def MessageToDict(proto):
       elif field.type == descriptor.FieldDescriptor.TYPE_MESSAGE:
         for child in value:
           dict_obj_list.append(MessageToDict(child))
-      dict_obj[field.name] = dict_obj_list
+      if dict_obj_list:
+        dict_obj[field.name] = dict_obj_list
     else:
       if field.type in PRIMITIVE_TYPES:
+        value = getattr(proto, field.name)
         dict_obj[field.name] = value
       elif field.type == descriptor.FieldDescriptor.TYPE_MESSAGE:
-        dict_obj[field.name] = MessageToDict(value)
+        if proto.HasField(field.name):
+          value = getattr(proto, field.name)
+          dict_obj[field.name] = MessageToDict(value)
 
   return dict_obj
