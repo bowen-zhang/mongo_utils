@@ -21,6 +21,7 @@ PRIMITIVE_TYPES = [
     descriptor.FieldDescriptor.TYPE_SINT32,
     descriptor.FieldDescriptor.TYPE_SINT64,
     descriptor.FieldDescriptor.TYPE_BYTES,
+    descriptor.FieldDescriptor.TYPE_ENUM,
 ]
 
 
