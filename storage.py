@@ -1,6 +1,6 @@
 import pymongo
 
-import dict_format
+from . import dict_format
 
 
 class AutoId(object):
@@ -67,10 +67,21 @@ class MongoStorage(object):
     return doc
 
   def save(self, doc, filter=None):
+    """Inserts or updates a document.
+
+    Args:
+      doc: document (as a dictionary) to save.
+      filter: if given, updates matching document, otherwise insert new document.
+    Returns:
+      id of document.
+    """
     if filter:
       self._coll.update_one(filter, {'$set': doc}, upsert=True)
+      doc = self._coll.find_one(filter)
+      return str(doc['_id'])
     else:
-      self._coll.insert_one(doc)
+      insert_one_result = self._coll.insert_one(doc)
+      return str(insert_one_result.inserted_id)
 
 
 class ProtobufMongoStorage(MongoStorage):
@@ -96,4 +107,4 @@ class ProtobufMongoStorage(MongoStorage):
 
   def save(self, proto, filter=None):
     doc = dict_format.MessageToDict(proto)
-    super(ProtobufMongoStorage, self).save(doc, filter)
+    return super(ProtobufMongoStorage, self).save(doc, filter)
