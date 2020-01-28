@@ -52,8 +52,8 @@ class MongoStorage(object):
   def find_one(self, filter):
     return self._coll.find_one(filter)
 
-  def find(self, filter):
-    return self._coll.find(filter)
+  def find(self, filter=None, limit=0, sort=None):
+    return self._coll.find(filter=filter, limit=limit, sort=sort)
 
   def find_or_create(self, filter, new_doc):
     doc = self._coll.find_one(filter)
@@ -96,8 +96,8 @@ class ProtobufMongoStorage(MongoStorage):
     else:
       return None
 
-  def find(self, filter):
-    for doc in super(ProtobufMongoStorage, self).find(filter):
+  def find(self, filter=None, limit=0, sort=None):
+    for doc in super(ProtobufMongoStorage, self).find(filter, limit, sort):
       yield dict_format.Parse(doc, self._proto_cls())
 
   def find_or_create(self, filter, proto):
