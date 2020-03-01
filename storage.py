@@ -49,11 +49,11 @@ class MongoStorage(object):
       self._auto_id = AutoId(self._collection, self._database, self._client)
     return self._auto_id
 
-  def find_one(self, filter):
-    return self._coll.find_one(filter)
+  def find_one(self, *args, **kwargs):
+    return self._coll.find_one(*args, **kwargs)
 
-  def find(self, filter=None, limit=0, sort=None):
-    return self._coll.find(filter=filter, limit=limit, sort=sort)
+  def find(self, *args, **kwargs):
+    return self._coll.find(*args, **kwargs)
 
   def find_or_create(self, filter, new_doc):
     doc = self._coll.find_one(filter)
@@ -89,15 +89,15 @@ class ProtobufMongoStorage(MongoStorage):
     super(ProtobufMongoStorage, self).__init__(*args, **kwargs)
     self._proto_cls = proto_cls
 
-  def find_one(self, filter):
-    doc = super(ProtobufMongoStorage, self).find_one(filter)
+  def find_one(self, *args, **kwargs):
+    doc = super(ProtobufMongoStorage, self).find_one(*args, **kwargs)
     if doc:
       return dict_format.Parse(doc, self._proto_cls())
     else:
       return None
 
-  def find(self, filter=None, limit=0, sort=None):
-    for doc in super(ProtobufMongoStorage, self).find(filter, limit, sort):
+  def find(self, *args, **kwargs):
+    for doc in super(ProtobufMongoStorage, self).find(*args, **kwargs):
       yield dict_format.Parse(doc, self._proto_cls())
 
   def find_or_create(self, filter, proto):
