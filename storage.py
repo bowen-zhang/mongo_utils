@@ -1,3 +1,4 @@
+import logging
 import pymongo
 
 from . import dict_format
@@ -30,14 +31,17 @@ class AutoId(object):
 
 
 class MongoStorage(object):
-  def __init__(self, database, collection, client=None, auto_id_field=None):
-    self._database = database
-    self._collection = collection
+  def __init__(self, database, collection, client=None, auto_id_field=None, indexes=None):
+    self._database_name = database
+    self._collection_name = collection
     self._client = client or pymongo.MongoClient()
+    self._indexes = indexes or {}
 
     self._coll = self._client[database][collection]
     self._auto_id = None
     self._auto_id_field = auto_id_field
+
+    self._logger = logging.getLogger(self.__class__.__name__)
 
   @property
   def collection(self):
@@ -46,8 +50,39 @@ class MongoStorage(object):
   @property
   def auto_id(self):
     if not self._auto_id:
-      self._auto_id = AutoId(self._collection, self._database, self._client)
+      self._auto_id = AutoId(self._collection_name,
+                             self._database_name, self._client)
     return self._auto_id
+
+  def create_indexes(self):
+    new_count = 0
+    update_count = 0
+    remove_count = 0
+
+    old_indexes = list(self._coll.list_indexes())
+    old_indexes = {x['name']: list(x['key'].items()) for x in old_indexes}
+
+    for name, keys in self._indexes.items():
+      if name in old_indexes:
+        if self._same_keys(keys, self._indexes[name]):
+          continue
+        self._coll.drop_index(name)
+        self._coll.create_index(name=name, keys=keys, background=True)
+        update_count += 1
+      else:
+        self._coll.create_index(name=name, keys=keys, background=True)
+        new_count += 1
+
+    for name, keys in old_indexes.items():
+      if name not in self._indexes and name != '_id_':
+        self._coll.drop_index(name)
+        remove_count += 1
+
+    self._logger.info('[{0}.{1}] Created {2} indexes, updated {3} indexes, removed {4} indexes.'.format(
+        self._database_name, self._collection_name, new_count, update_count, remove_count))
+
+  def _same_keys(self, keys1, keys2):
+    return keys1.sort(key=lambda x: x[0]) == keys2.sort(key=lambda x: x[0])
 
   def find_one(self, *args, **kwargs):
     return self._coll.find_one(*args, **kwargs)
