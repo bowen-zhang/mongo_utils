@@ -32,12 +32,16 @@ class AutoId(object):
 class MongoStorage(object):
   def __init__(self, database, collection, client=None, auto_id_field=None):
     self._database = database
-    self._collection = collection
+    self._collection_name = collection
     self._client = client or pymongo.MongoClient()
 
     self._coll = self._client[database][collection]
     self._auto_id = None
     self._auto_id_field = auto_id_field
+
+  @property
+  def name(self):
+    return self._collection_name
 
   @property
   def collection(self):
@@ -46,7 +50,8 @@ class MongoStorage(object):
   @property
   def auto_id(self):
     if not self._auto_id:
-      self._auto_id = AutoId(self._collection, self._database, self._client)
+      self._auto_id = AutoId(self._collection_name,
+                             self._database, self._client)
     return self._auto_id
 
   def find_one(self, *args, **kwargs):
@@ -88,6 +93,10 @@ class ProtobufMongoStorage(MongoStorage):
   def __init__(self, proto_cls, *args, **kwargs):
     super(ProtobufMongoStorage, self).__init__(*args, **kwargs)
     self._proto_cls = proto_cls
+
+  @property
+  def proto_cls(self):
+    return self._proto_cls
 
   def find_one(self, *args, **kwargs):
     doc = super(ProtobufMongoStorage, self).find_one(*args, **kwargs)
