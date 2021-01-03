@@ -1,6 +1,6 @@
-PROTOC = python -m grpc_tools.protoc
+PYTHON = python3
+PROTOC = $(PYTHON) -m grpc_tools.protoc
 PROTO_DIR = ./
-PYTHON = python
 
 init:
 	sudo apt install protobuf-compiler

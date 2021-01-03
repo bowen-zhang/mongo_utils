@@ -40,7 +40,7 @@ class DictFormatTests(unittest.TestCase):
     self.assertTrue(isinstance(bson['float_value'], float))
     self.assertEqual(bson['float_value'], self._proto.float_value)
     self.assertIn('string_value', bson)
-    self.assertTrue(isinstance(bson['string_value'], unicode))
+    self.assertTrue(isinstance(bson['string_value'], str))
     self.assertEqual(bson['string_value'], self._proto.string_value)
     self.assertIn('int_list', bson)
     self.assertTrue(isinstance(bson['int_list'], list), type(bson['int_list']))
