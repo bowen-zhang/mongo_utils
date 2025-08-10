@@ -24,6 +24,14 @@ PRIMITIVE_TYPES = [
     descriptor.FieldDescriptor.TYPE_ENUM,
 ]
 
+def _ParseDateTimeString(dt: str) -> datetime.datetime:
+  if dt.endswith('Z'):
+    return datetime.datetime.fromisoformat(dt.rstrip('Z'))
+  elif dt.endswith('GMT'):
+    dt = dt.split(',')[1].strip()
+    return datetime.datetime.strptime(dt, '%d %b %Y %H:%M:%S GMT')
+  else:
+    raise Exception('Unsupported date time string: {0}'.format(dt))
 
 def Parse(dict_obj, proto):
   """Parses a dictionary object into protobuf.
@@ -36,9 +44,13 @@ def Parse(dict_obj, proto):
   """
   proto.Clear()
 
-  if isinstance(dict_obj, datetime.datetime):
-    assert isinstance(proto, timestamp_pb2.Timestamp)
-    proto.FromDatetime(dict_obj)
+  if isinstance(proto, timestamp_pb2.Timestamp):
+    if isinstance(dict_obj, datetime.datetime):
+      proto.FromDatetime(dict_obj)
+    elif isinstance(dict_obj, str):
+      proto.FromDatetime(_ParseDateTimeString(dict_obj))
+    else:
+      assert 'Unexpected data type for timestamp protobuf'
     return proto
 
   for field in proto.DESCRIPTOR.fields:
@@ -73,7 +85,7 @@ def MessageToDict(proto):
     return proto.ToDatetime()
 
   dict_obj = {}
-  for field in proto.DESCRIPTOR.fields:
+  for (field, value) in proto.ListFields():
     if field.label == descriptor.FieldDescriptor.LABEL_REPEATED:
       value = getattr(proto, field.name)
       dict_obj_list = []
@@ -87,11 +99,9 @@ def MessageToDict(proto):
         dict_obj[field.name] = dict_obj_list
     else:
       if field.type in PRIMITIVE_TYPES:
-        value = getattr(proto, field.name)
-        dict_obj[field.name] = value
+        dict_obj[field.name] = getattr(proto, field.name)
       elif field.type == descriptor.FieldDescriptor.TYPE_MESSAGE:
-        if proto.HasField(field.name):
-          value = getattr(proto, field.name)
-          dict_obj[field.name] = MessageToDict(value)
+        value = getattr(proto, field.name)
+        dict_obj[field.name] = MessageToDict(value)
 
   return dict_obj
