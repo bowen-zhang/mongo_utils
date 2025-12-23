@@ -70,6 +70,11 @@ class ProtobufMongoStorage(object):
       return None
 
   def find(self, *args, **kwargs):
+    filter = args[0] if args else kwargs.get('filter', {})
+    if self._id_field in filter:
+        filter['_id'] = objectid.ObjectId(filter[self._id_field])
+        del filter[self._id_field]
+
     for doc in self._coll.find(*args, **kwargs):
       doc[self._id_field] = str(doc['_id'])
       yield dict_format.Parse(doc, self._proto_cls())
