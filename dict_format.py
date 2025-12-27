@@ -57,7 +57,7 @@ def Parse(dict_obj, proto):
     if field.name not in dict_obj:
       continue
 
-    if field.label == descriptor.FieldDescriptor.LABEL_REPEATED:
+    if field.is_repeated:
       value = getattr(proto, field.name)
       if field.type in PRIMITIVE_TYPES:
         value.extend(dict_obj[field.name])
@@ -86,7 +86,7 @@ def MessageToDict(proto):
 
   dict_obj = {}
   for (field, value) in proto.ListFields():
-    if field.label == descriptor.FieldDescriptor.LABEL_REPEATED:
+    if field.is_repeated:
       value = getattr(proto, field.name)
       dict_obj_list = []
       if field.type in PRIMITIVE_TYPES:

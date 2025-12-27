@@ -62,6 +62,11 @@ class ProtobufMongoStorage(object):
     return keys1.sort(key=lambda x: x[0]) == keys2.sort(key=lambda x: x[0])
 
   def find_one(self, *args, **kwargs):
+    filter = args[0] if args else kwargs.get('filter', {})
+    if self._id_field in filter:
+        filter['_id'] = objectid.ObjectId(filter[self._id_field])
+        del filter[self._id_field]
+
     doc = self._coll.find_one(*args, **kwargs)
     if doc:
       doc[self._id_field] = str(doc['_id'])
@@ -110,4 +115,11 @@ class ProtobufMongoStorage(object):
     oid = self._coll.replace_one(filter, doc, upsert=True).upserted_id
     doc[self._id_field] = str(oid)
     return dict_format.Parse(doc, self._proto_cls())
+  
+  def delete_by_id(self, id):
+    self._coll.delete_one({'_id': objectid.ObjectId(id)})
+ 
+  def delete_by(self, filter) -> int:
+    result = self._coll.delete_many(filter)
+    return result.deleted_count
   
