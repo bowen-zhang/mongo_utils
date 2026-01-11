@@ -24,6 +24,9 @@ PRIMITIVE_TYPES = [
     descriptor.FieldDescriptor.TYPE_ENUM,
 ]
 
+ZERO_TIMESTAMP = timestamp_pb2.Timestamp()
+
+
 def _ParseDateTimeString(dt: str) -> datetime.datetime:
   if dt.endswith('Z'):
     return datetime.datetime.fromisoformat(dt.rstrip('Z'))
@@ -82,7 +85,7 @@ def MessageToDict(proto):
     A Python built-in dictionary object.
   """
   if isinstance(proto, timestamp_pb2.Timestamp):
-    return proto.ToDatetime()
+    return None if proto == ZERO_TIMESTAMP else proto.ToDatetime()
 
   dict_obj = {}
   for (field, value) in proto.ListFields():
@@ -102,6 +105,8 @@ def MessageToDict(proto):
         dict_obj[field.name] = getattr(proto, field.name)
       elif field.type == descriptor.FieldDescriptor.TYPE_MESSAGE:
         value = getattr(proto, field.name)
-        dict_obj[field.name] = MessageToDict(value)
+        py_obj = MessageToDict(value)
+        if py_obj is not None:
+          dict_obj[field.name] = py_obj
 
   return dict_obj
