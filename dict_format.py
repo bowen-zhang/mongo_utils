@@ -69,7 +69,8 @@ def Parse(dict_obj, proto):
           Parse(child, value.add())
     else:
       if field.type in PRIMITIVE_TYPES:
-        setattr(proto, field.name, dict_obj[field.name])
+        if dict_obj[field.name]:
+          setattr(proto, field.name, dict_obj[field.name])
       elif field.type == descriptor.FieldDescriptor.TYPE_MESSAGE:
         Parse(dict_obj[field.name], getattr(proto, field.name))
 
