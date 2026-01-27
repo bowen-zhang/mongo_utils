@@ -93,7 +93,7 @@ class ProtobufMongoStorage(object):
       Saved protobuf
     """
     doc = dict_format.MessageToDict(proto)
-    assert self._id_field not in doc
+    assert self._id_field not in doc, "Document to insert should not have id field set."
     
     oid = self._coll.insert_one(doc).inserted_id
 
@@ -102,7 +102,7 @@ class ProtobufMongoStorage(object):
 
   def replace(self, proto):
     doc = dict_format.MessageToDict(proto)
-    assert doc[self._id_field]
+    assert doc[self._id_field], "Document to replace must have id field set."
 
     oid = objectid.ObjectId(doc[self._id_field])
     del doc[self._id_field]
@@ -110,7 +110,7 @@ class ProtobufMongoStorage(object):
 
   def upsert_by(self, proto, filter):
     doc = dict_format.MessageToDict(proto)
-    assert self._id_field not in doc
+    assert self._id_field not in doc, "Document to upsert should not have id field set."
 
     oid = self._coll.replace_one(filter, doc, upsert=True).upserted_id
     doc[self._id_field] = str(oid)
